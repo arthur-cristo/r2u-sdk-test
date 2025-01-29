@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import '@r2u/javascript-ar-sdk'
+import React from 'react';
 
 declare global {
     interface Window {
@@ -18,6 +19,9 @@ const Ar = () => {
     };
 
     const [isLargeScreen, setIsLargeScreen] = useState(false);
+    const [isSdkInitialized, setIsSdkInitialized] = useState(false);
+    const [isQrCodeInitialized, setIsQrCodeInitialized] = useState(false);
+    const [isArAtached, setIsArAtached] = useState(false);
 
     useEffect(() => {
         const checkScreenSize = () => {
@@ -28,9 +32,11 @@ const Ar = () => {
 
         const initR2U = async () => {
             await R2U.init({ customerId: CUSTOMER_ID });
-            const IS_ACTIVE = await R2U.sku.isActive(SKU);
-            if (!SKU || !IS_ACTIVE) {
+            setIsSdkInitialized(true);
+            const IS_SKU_ACTIVE = await R2U.sku.isActive(SKU);
+            if (!SKU || !IS_SKU_ACTIVE) {
                 document.getElementById('r2u-ar-button')?.remove();
+                document.getElementById('r2u-qr-button')?.remove();
                 return;
             };
             const viewerPosition = document.getElementById('r2u-viewer');
@@ -45,14 +51,14 @@ const Ar = () => {
 
     useEffect(() => {
         const initAr = async () => {
-            if (isLargeScreen) {
+            if (isLargeScreen && !isQrCodeInitialized) {
                 const node = document.getElementById('r2u-qrcode');
-                if (node?.innerHTML) return;
                 await R2U.qrCode.create({
                     element: node,
                     sku: SKU
                 });
-            } else {
+                setIsQrCodeInitialized(true);
+            } else if (!isLargeScreen && !isArAtached) {
                 const arButton = document.getElementById('r2u-ar-button');
                 await R2U.ar.attach({
                     element: arButton,
@@ -60,6 +66,7 @@ const Ar = () => {
                     fallbackOptions: fallbackOptions,
                     showInstructions: 'once'
                 });
+                setIsArAtached(true);
             }
         }
         initAr();
