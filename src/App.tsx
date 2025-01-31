@@ -1,12 +1,11 @@
-import { Box, Flex, useBoolean } from '@chakra-ui/react'
+import { useBoolean } from '@chakra-ui/react'
 import './App.css'
 import { useEffect, useRef, useState } from 'react'
 import '@r2u/javascript-ar-sdk'
 import { ProductType } from '../types/Product'
-import CustomModal from '../components/CustomModal'
-import ProductBox from '../components/ProductBox'
 import SpinnerScreen from '../components/SpinnerScreen'
 import ProductNotFound from '../components/ProductNotFound'
+import ProductScreen from '../components/ProductScreen'
 
 declare global {
   interface Window {
@@ -34,7 +33,6 @@ function App() {
   const [isArAttached, setIsArAttached] = useBoolean();
   const [productData, setProductData] = useState<ProductType | null>(null);
   const [isSomethingWrong, setIsSomethingWrong] = useBoolean();
-  const [isModalOpen, setIsModalOpen] = useBoolean();
 
   const arButtonRef = useRef<HTMLButtonElement | null>(null);
   const qrCodeRef = useRef<HTMLDivElement | null>(null);
@@ -106,22 +104,15 @@ function App() {
   }, [isLargeScreen, isSdkInitialized, qrCodeRef.current, arButtonRef.current]);
 
   if (!productData) return <SpinnerScreen />;
-  return (!isSomethingWrong ? (
-    <Flex bg='brand.bg' h={{ md: '90vh' }} w='100vw' justify='center' p={8} align='center' gap={8} direction={{ base: 'column-reverse', md: 'row' }}>
-      <CustomModal isModalOpen={isModalOpen} close={setIsModalOpen} title={'Escaneie este QR Code para visualizar o produto na sua casa!'} maxW='20rem' >
-        <Box ref={qrCodeRef} w='10rem' h='10rem' />
-      </CustomModal>
-      <Box id='r2u-viewer' h={{ base: '40vh', md: '60vh' }} w={{ base: 'full', md: '40%' }} />
-      <ProductBox
-        productData={productData}
-        SKU={SKU}
-        product={product}
-        setIsModalOpen={setIsModalOpen}
-        isLargeScreen={isLargeScreen}
-        arButtonRef={arButtonRef}
-      />
-    </Flex>
-  ) : <ProductNotFound />)
+  return (!isSomethingWrong ?
+    <ProductScreen
+      productData={productData}
+      SKU={SKU}
+      product={product}
+      isLargeScreen={isLargeScreen}
+      arButtonRef={arButtonRef}
+      qrCodeRef={qrCodeRef} />
+    : <ProductNotFound />)
 }
 
 export default App
