@@ -1,9 +1,12 @@
-import { Box, Flex, Heading, HStack, Spinner, Text, useBoolean } from '@chakra-ui/react'
+import { Box, Flex, useBoolean } from '@chakra-ui/react'
 import './App.css'
 import { useEffect, useRef, useState } from 'react'
 import '@r2u/javascript-ar-sdk'
 import { ProductType } from '../types/Product'
-import CustomButton from '../components/CustomButton'
+import CustomModal from '../components/CustomModal'
+import ProductBox from '../components/ProductBox'
+import SpinnerScreen from '../components/SpinnerScreen'
+import ProductNotFound from '../components/ProductNotFound'
 
 declare global {
   interface Window {
@@ -102,48 +105,23 @@ function App() {
     initAr();
   }, [isLargeScreen, isSdkInitialized, qrCodeRef.current, arButtonRef.current]);
 
-  if (!productData) return (
-    <Flex bg='brand.bg' h='90vh' w='100vw' justify='center' p={8} align='center'>
-      <Spinner />
-    </Flex>
-  );
+  if (!productData) return <SpinnerScreen />;
   return (!isSomethingWrong ? (
     <Flex bg='brand.bg' h={{ md: '90vh' }} w='100vw' justify='center' p={8} align='center' gap={8} direction={{ base: 'column-reverse', md: 'row' }}>
-      <Box id="modal"
-        className={`fixed top-0 right-0 m-4 py-8 bg-white border border-gray-300 p-4 shadow-lg z-50 flex flex-col items-center justify-center rounded-md w-fit transition-all duration-500 ${isModalOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
-        <button onClick={setIsModalOpen.off}
-          className="absolute top-4 right-5 text-gray-600 hover:text-gray-900 cursor-pointer">
-          X
-        </button>
-        <Text m={6} mt={0}>
-          Escaneie este QR Code para<br />visualizar o produto na sua casa!
-        </Text>
+      <CustomModal isModalOpen={isModalOpen} close={setIsModalOpen} title={'Escaneie este QR Code para visualizar o produto na sua casa!'} maxW='20rem' >
         <Box ref={qrCodeRef} w='10rem' h='10rem' />
-      </Box>
+      </CustomModal>
       <Box id='r2u-viewer' h={{ base: '40vh', md: '60vh' }} w={{ base: 'full', md: '40%' }} />
-      <Box w={{ base: 'full', md: '40%' }} >
-        <Heading as='h3' size='md' mb='1rem' color='brand.dark' textAlign='start'>{productData.name}</Heading>
-        <Flex justify='space-between' mb='1rem' align='center'>
-          <Text>Cor: {product.color} • SKU: {SKU}</Text>
-        </Flex>
-        <HStack>
-          <Text textDecor='line-through'>R$ {product.prices[0].toFixed(2)}</Text>
-          <Heading as='h2' size='lg' color='brand.dark' textAlign='start'>R$ {product.prices[1].toFixed(2)}</Heading>
-          <Text>no pix ou boleto</Text>
-        </HStack>
-        <HStack mt='1rem' w='100%'>
-          <CustomButton onClick={setIsModalOpen.on} hidden={!isLargeScreen} variant='secondary' >Ver em RA</CustomButton>
-          <CustomButton ref={arButtonRef} hidden={isLargeScreen} variant='secondary'>Ver em RA</CustomButton>
-          <CustomButton link={productData.pdpUrl} variant='primary'>Comprar Agora</CustomButton>
-        </HStack>
-      </Box>
+      <ProductBox
+        productData={productData}
+        SKU={SKU}
+        product={product}
+        setIsModalOpen={setIsModalOpen}
+        isLargeScreen={isLargeScreen}
+        arButtonRef={arButtonRef}
+      />
     </Flex>
-  ) : (
-    <Flex bg='brand.bg' w='100vw' h='90vh' justify='center' align='center' gap={4} direction='column'>
-      <Heading color='brand.light'>Produto não encontrado.</Heading>
-      <Text as='h2' fontSize='xl' color='brand.dark'>Por favor, tente novamente mais tarde.</Text>
-    </Flex>
-  ))
+  ) : <ProductNotFound />)
 }
 
 export default App
